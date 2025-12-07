@@ -1,7 +1,8 @@
 import User from "../models/User.js";
 import { hash } from "../utils/bcrypt.js";
 import { createAccessToken, createRefreshToken } from "../services/userService.js";
-
+import { textNormalize } from "../services/textService.js";
+import { searchFunc } from '../services/searchService.js';
 // post: api/user/register
 const register = async (req, res) => {
      try {
@@ -38,12 +39,12 @@ const register = async (req, res) => {
 
           // create user
           const newUser = new User({
-               username: username,
+               username: username.trim(),
                password: await hash(password),
-               email: email,
-               fullName: fullName,
-               tel: tel,
-               address: address,
+               email: email.trim(),
+               fullName: textNormalize(fullName, "name"),
+               tel: tel.trim(),
+               address: textNormalize(address, "address"),
                role: role,
           });
 
@@ -142,6 +143,60 @@ const deleteUser = async (req, res) => {
      }
 }
 
+// get: api/user/search-user
+const searchUser = async (req, res) => {
+     try {
+          const userId = req.user.id;
+          const search = req.query.search || "";
+          const limit = parseInt(req.query.limit) || 10;
+          const page = parseInt(req.query.page) || 1;
+          const skip = (page - 1) * limit;
+          console.log("[searchUser] search: ", search);
+
+          // check user exist
+          const user = await User.findOne({ _id: userId });
+          if (!user) {
+               return res.status(400).json({
+                    success: false,
+                    message: "User not found",
+               })
+          }
+
+          // check permission
+          if (user.role.type === "USER" && user.role.position !== "MANAGER" && user.role.position === "RECEPTIONIST") {
+               return res.status(400).json({
+                    success: false,
+                    message: "You do not have permission to perform this action",
+               })
+          }
+
+          // search user
+          const users = await searchFunc(search, User, "fullName", limit, skip);
+
+          if (users.length === 0) {
+               return res.status(200).json({
+                    success: true,
+                    message: "No user found",
+               })
+          }
+
+          res.status(200).json({
+               success: true,
+               message: "Search user successfully",
+               data: {
+                    users: users,
+               }
+          })
+     }
+     catch (error) {
+          console.log("[searchUser] Error: ", error.message);
+          res.status(500).json({
+               success: false,
+               message: error.message,
+          })
+     }
+}
+
 
 
 
@@ -149,4 +204,5 @@ export {
      register,
      getAllUsers,
      deleteUser,
+     searchUser,
 }

@@ -33,11 +33,11 @@ const requiredUser = (req, res, next) => {
 
           // get user from token
           req.user = user;
-          console.log("[auth.js] User from token:", req.user);
+          console.log("[auth] User from token:", req.user);
 
           next();
      } catch (error) {
-          console.log("[auth.js] requiredUser error: ", error);
+          console.log("[auth] requiredUser error: ", error);
           res.status(500).json({
                success: false,
                message: "Authentication Failed",
@@ -85,12 +85,12 @@ const requiredAdmin = (req, res, next) => {
 
           // get user from token
           req.user = user;
-          console.log("[auth.js] Admin from token: ", req.user);
+          console.log("[auth] Admin from token: ", req.user);
 
           next();
      }
      catch (error) {
-          console.log("[auth.js] requiredAdmin error: ", error);
+          console.log("[auth] requiredAdmin error: ", error);
           res.status(500).json({
                success: false,
                message: "Authentication Failed",

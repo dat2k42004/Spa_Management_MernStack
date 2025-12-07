@@ -20,7 +20,7 @@ const generateToken = (user) => {
           return token;
      }
      catch (error) {
-          console.log("[jwt.js] generateToken error: ", error);
+          console.log("[jwt] generateToken error: ", error);
      }
 }
 
@@ -40,7 +40,7 @@ const refreshToken = (user) => {
           console.log("Refreshed token: ", token);
           return token;
      } catch (error) {
-          console.log("[jwt.js] RefreshToken error: ", error);
+          console.log("[jwt] RefreshToken error: ", error);
      }
 }
 
@@ -53,7 +53,7 @@ const verifyToken = (token) => {
           return user;
      }
      catch (error) {
-          console.log("[jwt.js] verifyToken error: ", error);
+          console.log("[jwt] verifyToken error: ", error);
      }
 }
 

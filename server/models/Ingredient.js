@@ -18,10 +18,13 @@ const ingredientSchema = new mongoose.Schema({
      },
      description: {
           type: String,
-     }
+     },
+     images: [{
+          type: String,
+     }]
 }, { timestamps: true });
 
-ingredientSchema.index({ name: 1 }, { unique: true });
+ingredientSchema.index({ name: 1 });
 const Ingredient = mongoose.model("Ingredient", ingredientSchema);
 
 export default Ingredient;

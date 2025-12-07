@@ -16,8 +16,7 @@ const upload = (folder) => {
                cb(null, uploadPath);
           },
           filename: (req, file, cb) => {
-               const ext = path.extname(file.originalname);
-               const filename = Date.now() + ext;
+               const filename = Date.now() + "-" + file.originalname;
                cb(null, filename);
           }
      })
@@ -29,7 +28,7 @@ const upload = (folder) => {
                cb(null, true);
           }
           else {
-               cb(new Error("[upload.js] Invalid file type"));
+               cb(new Error("[upload] Invalid file type"));
           }
      }
 

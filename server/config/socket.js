@@ -31,13 +31,13 @@ const init = (httpServer) => {
 
                next();
           } catch (error) {
-               return next(new Error("[socket.js] Authentication Socket error: ", error));
+               return next(new Error("[socket] Authentication Socket error: ", error));
           }
      })
 
      // handle connection
      authIo.on("connection", (socket) => {
-          console.log("[socket.js] New client connected to auth: ", socket.id);
+          console.log("[socket] New client connected to auth: ", socket.id);
 
           const userId = socket.userId;
           console.log(`client ${userId} join into room: ${socket.id}`);
@@ -47,7 +47,7 @@ const init = (httpServer) => {
           }
 
           socket.on("disconnect", () => {
-               console.log("[socket.js]Client disconnected from auth: ", socket.id);
+               console.log("[socket] Client disconnected from auth: ", socket.id);
           })
      })
 
@@ -55,30 +55,30 @@ const init = (httpServer) => {
      // public io: localhost:5173/public
      publicIo = io.of("/public");
      publicIo.on("connection", (socket) => {
-          console.log("[socket.js] New client connected to public: ", socket.id);
+          console.log("[socket] New client connected to public: ", socket.id);
 
           socket.on("disconnect", () => {
-               console.log("[socket.js]Client disconnected from public: ", socket.id);
+               console.log("[socket]Client disconnected from public: ", socket.id);
           })
      })
 
      // error handing
      io.on("error", (error) => {
-          console.log("[socket.js] Socket error: ", error);
+          console.log("[socket] Socket error: ", error);
      })
 }
 
 
 const getAuthIo = () => {
      if (!authIo) {
-          throw new Error("[socket.js] Auth io not initialized");
+          throw new Error("[socket] Auth io not initialized");
      }
      return authIo;
 }
 
 const getPublicIo = () => {
      if (!publicIo) {
-          throw new Error("[socket.js] Public io not initialized");
+          throw new Error("[socket] Public io not initialized");
      }
      return publicIo;
 }

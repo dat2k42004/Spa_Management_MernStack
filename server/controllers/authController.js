@@ -1,9 +1,9 @@
 import User from "../models/User.js";
 import { compare, hash } from "../utils/bcrypt.js";
 import { verifyToken } from "../utils/jwt.js";
-import {createAccessToken, createRefreshToken} from "../services/userService.js";
-
-
+import { createAccessToken, createRefreshToken } from "../services/userService.js";
+import { textNormalize } from "../services/textService.js";
+import { deleteFile } from "../services/uploadService.js";
 // post: api/auth/login
 const login = async (req, res) => {
      try {
@@ -120,7 +120,7 @@ const refreshAccessToken = async (req, res) => {
           })
      } catch (error) {
           console.log("[refreshAccessToken] Error: ", error.message);
-          res.status(500).json({
+          return res.status(500).json({
                success: false,
                message: error.message,
           })
@@ -172,11 +172,12 @@ const updateProfile = async (req, res) => {
      try {
           const userId = req.user.id;
           const { fullName, address } = req.body;
-          const avatarFile = req.file && req.file.filename ? `/uploads/avatar/${req.file.filename}` : null;
+          const avatarFile = req.file && req.file.filename ? `uploads/avatar/${req.file.filename}` : null;
           console.log(fullName, address, avatarFile);
           // get user
           const user = await User.findById(userId);
           if (!user) {
+               deleteFile(avatarFile);
                return res.status(400).json({
                     success: false,
                     message: "User not found",
@@ -184,14 +185,18 @@ const updateProfile = async (req, res) => {
           }
           // check null
           if (!fullName && !address && !avatarFile) {
+               deleteFile(avatarFile);
                return res.status(400).json({
                     success: false,
                     message: "Nothing to update"
                })
           }
 
-          user.fullName = fullName ? fullName : user.fullName;
-          user.address = address ? address : user.address;
+          user.fullName = fullName ? textNormalize(fullName, "name") : user.fullName;
+          user.address = address ? textNormalize(address, "address") : user.address;
+          if (user.avatar !== "uploads/avatar/default_avatar.png" && avatarFile) {
+               deleteFile(user.avatar);
+          }
           user.avatar = avatarFile ? avatarFile : user.avatar;
 
           await user.save();

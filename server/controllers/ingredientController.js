@@ -1,0 +1,260 @@
+import Ingredient from "../models/Ingredient.js";
+import User from "../models/User.js";
+import router from "../routes/index.js";
+import { textNormalize } from "../services/textService.js";
+import { deleteFiles } from "../services/uploadService.js";
+import { searchFunc } from "../services/searchService.js";
+
+
+// post: api/ingredient/add
+const addIngredient = async (req, res) => {
+     try {
+          const id = req.user.id;
+          const { name, unit, number, description } = req.body;
+          const images = req.files ? req.files.map(file => `uploads/ingredient/${file.filename}`) : [];
+          // check user
+          const user = await User.findOne({ _id: id });
+          if (!user) {
+               deleteFiles(images);
+               return res.status(400).json({
+                    success: false,
+                    message: "User not found",
+               })
+          }
+
+          // check permission
+          if (user.role.type === "USER" && user.role.position !== "WAREHOUSE" && user.role.position !== "MANAGER") {
+               deleteFiles(images);
+               return res.status(400).json({
+                    success: false,
+                    message: "You do not have permission to add ingredient",
+               })
+          }
+
+          // check null fields
+          if (!name || !unit || images.length === 0) {
+               deleteFiles(images);
+               return res.status(400).json({
+                    success: false,
+                    message: "Missing required fields",
+               })
+          }
+
+          // check ingredient exist
+          const existedIngredient = await Ingredient.findOne({ name: name });
+          if (existedIngredient) {
+               deleteFiles(images);
+               return res.status(400).json({
+                    success: false,
+                    message: "Ingredient already existed",
+               })
+          }
+
+          // create new ingredient
+          const newIngredient = new Ingredient({
+               name: textNormalize(name, "name"),
+               unit: textNormalize(unit, "unit"),
+               number: number ? Number(number) : 0,
+               description: description ? textNormalize(description, "des") : "",
+               images: images
+          });
+
+          await newIngredient.save();
+
+          res.status(200).json({
+               success: true,
+               message: "Add ingredient successfully",
+               data: {
+                    ingredient: {
+                         id: newIngredient._id,
+                         name: newIngredient.name,
+                         unit: newIngredient.unit,
+                         number: newIngredient.number,
+                         description: newIngredient.description,
+                         images: newIngredient.images,
+                    }
+               }
+          })
+
+     }
+     catch (error) {
+          console.log("[addIngredient] Error: ", error);
+          return res.status(500).json({
+               success: false,
+               message: error.message,
+          })
+     }
+}
+
+// put: api/ingredient/update/:id
+const updateIngredient = async (req, res) => {
+     try {
+          const userId = req.user.id;
+          let { unit, number, description, currentImage } = req.body;
+          currentImage = typeof currentImage === "string" ? JSON.parse(currentImage) : currentImage;
+          const ingredientId = req.params.id;
+          const images = req.files ? req.files.map(file => `uploads/ingredient/${file.filename}`) : [];
+
+          // check user
+          const user = await User.findOne({ _id: userId });
+          if (!user) {
+               deleteFiles(images);
+               return res.status(400).json({
+                    success: false,
+                    message: "User not found",
+               })
+          }
+
+          // check permission
+          if (user.role.type === "USER" && user.role.position !== "WAREHOUSE") {
+               deleteFiles(images);
+               return res.status(400).json({
+                    success: false,
+                    message: "You do not have permission to update ingredient",
+               })
+          }
+
+          // check null fields
+          // console.log("[updateIngredient] Current Image: ", currentImage);
+          if (!unit || !number || (currentImage.length === 0 && images.length === 0)) {
+               deleteFiles(images);
+               return res.status(400).json({
+                    success: false,
+                    message: "Missing required fields",
+               })
+          }
+
+          // check ingredient exist
+          console.log("[updateIngredient] Ingredient id: ", ingredientId);
+          const ingredient = await Ingredient.findOne({
+               _id: ingredientId,
+          })
+          if (!ingredient) {
+               deleteFiles(images);
+               return res.status(400).json({
+                    success: false,
+                    message: "Ingredient not found",
+               })
+          }
+
+          // check new info
+          unit = textNormalize(unit, "unit");
+          description = description ? textNormalize(description, "des") : "";
+          const removeFile = (ingredient.images.length !== 0) ? ingredient.images.filter(img => !currentImage.includes(img)) : [];
+          if (ingredient.unit === unit && ingredient.number === Number(number) && ingredient.description === description && removeFile.length === 0 && images.length === 0) {
+               deleteFiles(images);
+               return res.status(400).json({
+                    success: false,
+                    message: "Nothing to update",
+               })
+          }
+
+          // delete removed files
+          console.log("[updateIngredient] Remove file: ", removeFile);
+          if (removeFile.length !== 0) {
+               deleteFiles(removeFile);
+          }
+
+          // update ingredient
+          ingredient.unit = unit;
+          ingredient.number = Number(number);
+          ingredient.description = description;
+          ingredient.images = [...currentImage, ...images];
+
+          await ingredient.save();
+
+          res.status(200).json({
+               success: true,
+               message: 'Update ingredient successfully',
+               data: {
+                    ingredient: {
+                         id: ingredient._id,
+                         name: ingredient.name,
+                         unit: ingredient.unit,
+                         number: ingredient.number,
+                         description: ingredient.description,
+                         images: ingredient.images,
+                    }
+               }
+          })
+
+     }
+     catch (error) {
+          console.log("[updateIngredient] Error: ", error);
+          return res.status(500).json({
+               success: false,
+               message: error.message,
+          })
+     }
+}
+
+// get: api/ingredient/get-all-ingredients
+const getAllIngredients = async (req, res) => {
+     try {
+          // get query params
+          const limit = parseInt(req.query.limit) || 10;
+          const page = parseInt(req.query.page) || 1;
+          const skip = (page - 1) * limit;
+          // get ingredients
+          const ingredients = await Ingredient.find().limit(limit).skip(skip).sort({ createdAt: -1 });
+
+          res.status(200).json({
+               success: true,
+               message: "Get all ingredients successfully",
+               data: {
+                    ingredients: ingredients,
+               }
+          })
+     }
+     catch (error) {
+          console.log("[getAllIngredients] Error: ", error);
+          return res.status(500).json({
+               success: false,
+               message: error.message,
+          })
+     }
+}
+
+// get: api/ingredient/search-ingredient/:search
+const searchIngredient = async (req, res) => {
+     try {
+          // get params
+          const search = req.query.search || "";
+          const limit = parseInt(req.query.limit) || 10;
+          const page = parseInt(req.query.page) || 1;
+          const skip = (page - 1) * limit;
+
+          // search ingredients
+          const ingredients = await searchFunc(search, Ingredient, "name", limit, skip);
+
+          if (ingredients.length === 0) {
+               return res.status(200).json({
+                    success: true,
+                    message: "No ingredient found",
+               })
+          }
+
+          res.status(200).json({
+               success: true,
+               message: "Search ingredient successfully",
+               data: {
+                    ingredients: ingredients,
+               }
+          })
+
+     }
+     catch (error) {
+          console.log("[searchIngredient] Error: ", error);
+          return res.status(500).json({
+               success: false,
+               message: error.message,
+          })
+     }
+}
+
+export {
+     addIngredient,
+     updateIngredient,
+     getAllIngredients,
+     searchIngredient,
+}
