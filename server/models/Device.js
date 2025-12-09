@@ -4,6 +4,8 @@ const deviceSchema = new mongoose.Schema({
      name: {
           type: String,
           required: true,
+          unique: true,
+          index: true
      },
      type: {
           type: String,
@@ -16,7 +18,17 @@ const deviceSchema = new mongoose.Schema({
      },
      description: {
           type: String,
-     }
+     },
+     isDeleted: {
+          type: Boolean,
+          required: true,
+          default: false,
+     },
+     images: [
+          {
+               type: String,
+          }
+     ]
 }, { timestamps: true });
 
 const Device = mongoose.model("Device", deviceSchema);

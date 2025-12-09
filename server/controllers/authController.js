@@ -4,6 +4,7 @@ import { verifyToken } from "../utils/jwt.js";
 import { createAccessToken, createRefreshToken } from "../services/userService.js";
 import { textNormalize } from "../services/textService.js";
 import { deleteFile } from "../services/uploadService.js";
+
 // post: api/auth/login
 const login = async (req, res) => {
      try {
@@ -23,7 +24,8 @@ const login = async (req, res) => {
                     { username: account },
                     { email: account },
                     { tel: account },
-               ]
+               ],
+               isDeleted: false,
           });
 
           // check user exist
@@ -34,6 +36,7 @@ const login = async (req, res) => {
                })
           }
 
+
           // check password
           const checkPassword = await compare(password, user.password);
           if (!checkPassword) {
@@ -42,6 +45,7 @@ const login = async (req, res) => {
                     message: "Password incorrect",
                })
           }
+
 
           // tokens
           const access = await createAccessToken(user);
@@ -53,7 +57,7 @@ const login = async (req, res) => {
                message: "Login Successfully",
                data: {
                     user: {
-                         id: user._id,
+                         _id: user._id,
                          username: user.username,
                          email: user.email,
                          fullName: user.fullName,
@@ -76,7 +80,7 @@ const login = async (req, res) => {
      }
 };
 
-// post: api/auth/refresh-token
+// post: api/auth/refresh-token (requiredUser)
 const refreshAccessToken = async (req, res) => {
      try {
           const { refreshToken } = req.body;
@@ -99,7 +103,9 @@ const refreshAccessToken = async (req, res) => {
           }
 
           // get user
-          const user = await User.findById(decoded.id);
+          const user = await User.findOne({ _id: decoded.id, isDeleted: false });
+
+          // check user exist
           if (!user) {
                return res.status(400).json({
                     success: false,
@@ -128,13 +134,13 @@ const refreshAccessToken = async (req, res) => {
 }
 
 
-// get: api/auth/info
+// get: api/auth/info (requiredUser)
 const getUserInfo = async (req, res) => {
      try {
           const userId = req.user.id;
 
-          // get user
-          const user = await User.findById(userId);
+          // check user exist
+          const user = await User.findOne({ _id: userId, isDeleted: false });
           if (!user) {
                return res.status(400).json({
                     success: false,
@@ -146,14 +152,17 @@ const getUserInfo = async (req, res) => {
                success: true,
                message: "User info retrieved successfully",
                data: {
-                    id: user._id,
-                    username: user.username,
-                    email: user.email,
-                    fullName: user.fullName,
-                    tel: user.tel,
-                    address: user.address,
-                    role: user.role,
-                    avatar: user.avatar,
+                    user: {
+                         _id: user._id,
+                         username: user.username,
+                         email: user.email,
+                         fullName: user.fullName,
+                         tel: user.tel,
+                         address: user.address,
+                         role: user.role,
+                         avatar: user.avatar,
+                         isDeleted: user.isDeleted,
+                    }
                }
           })
      } catch (error) {
@@ -167,7 +176,7 @@ const getUserInfo = async (req, res) => {
 }
 
 
-// put: api/auth/update-profile
+// put: api/auth/update-profile (requiredUser)
 const updateProfile = async (req, res) => {
      try {
           const userId = req.user.id;
@@ -175,7 +184,7 @@ const updateProfile = async (req, res) => {
           const avatarFile = req.file && req.file.filename ? `uploads/avatar/${req.file.filename}` : null;
           console.log(fullName, address, avatarFile);
           // get user
-          const user = await User.findById(userId);
+          const user = await User.findOne({ _id: userId, isDeleted: false });
           if (!user) {
                deleteFile(avatarFile);
                return res.status(400).json({
@@ -183,6 +192,7 @@ const updateProfile = async (req, res) => {
                     message: "User not found",
                })
           }
+
           // check null
           if (!fullName && !address && !avatarFile) {
                deleteFile(avatarFile);
@@ -205,14 +215,16 @@ const updateProfile = async (req, res) => {
                success: true,
                message: "Update profile successfully",
                data: {
-                    id: user._id,
-                    username: user.username,
-                    email: user.email,
-                    fullName: user.fullName,
-                    tel: user.tel,
-                    address: user.address,
-                    role: user.role,
-                    avatar: user.avatar,
+                    user: {
+                         _id: user._id,
+                         username: user.username,
+                         email: user.email,
+                         fullName: user.fullName,
+                         tel: user.tel,
+                         address: user.address,
+                         role: user.role,
+                         avatar: user.avatar,
+                    }
                }
           })
      } catch (error) {
@@ -224,10 +236,11 @@ const updateProfile = async (req, res) => {
      }
 }
 
-// put: api/auth/change-password
+// put: api/auth/change-password (requiredUser)
 const changePassword = async (req, res) => {
      try {
           const userId = req.user.id;
+          // console.log("body: ", req.body);
           const { currentPassword, newPassword } = req.body;
 
           // check null
@@ -238,8 +251,8 @@ const changePassword = async (req, res) => {
                })
           }
 
-          // get user
-          const user = await User.findById(userId);
+          // check user exist
+          const user = await User.findOne({ _id: userId, isDeleted: false });
           if (!user) {
                return res.status(400).json({
                     success: false,

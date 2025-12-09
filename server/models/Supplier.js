@@ -29,6 +29,11 @@ const supplierSchema = new mongoose.Schema({
           accountName: {
                type: String,
           }
+     },
+     isDeleted: {
+          type: Boolean,
+          default: false,
+          required: true,
      }
 }, { timestamps: true });
 

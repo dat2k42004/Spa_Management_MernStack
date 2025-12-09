@@ -12,15 +12,21 @@ const slotSchema = new mongoose.Schema({
      status: {
           type: String,
           enum: ["ACTIVE", "INACTIVE"],
-          default: "ACTIVE",
+          default: "INACTIVE",
      },
      deviceId: {
           type: mongoose.Schema.Types.ObjectId,
           required: true,
           ref: "Device",
+     },
+     isDeleted: {
+          type: Boolean,
+          default: false,
+          required: true,
      }
 }, { timestamps: true });
 
+slotSchema.index({ room: 1, location: 1, deviceId: 1});
 const Slot = mongoose.model("Slot", slotSchema);
 
 export default Slot;

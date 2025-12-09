@@ -5,6 +5,7 @@ const ingredientSchema = new mongoose.Schema({
           type: String,
           required: true,
           unique: true,
+          index: true,
      },
      unit: {
           type: String,
@@ -21,10 +22,14 @@ const ingredientSchema = new mongoose.Schema({
      },
      images: [{
           type: String,
-     }]
+     }],
+     isDeleted: {
+          type: Boolean,
+          default: false,
+          required: true,
+     }
 }, { timestamps: true });
 
-ingredientSchema.index({ name: 1 });
 const Ingredient = mongoose.model("Ingredient", ingredientSchema);
 
 export default Ingredient;

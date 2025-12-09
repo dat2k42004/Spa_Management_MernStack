@@ -45,6 +45,11 @@ const userSchema = new mongoose.Schema({
      avatar: {
           type: String,
           default: "/uploads/avatars/default_avatar.png",
+     },
+     isDeleted: {
+          type: Boolean,
+          default: false,
+          required: true,
      }
 }, { timestamps: true });
 

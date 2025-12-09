@@ -5,6 +5,7 @@ const serviceSchema = new mongoose.Schema({
           type: String,
           required: true,
           unique: true,
+          index: true,
      },
      status: {
           type: String,
@@ -18,6 +19,16 @@ const serviceSchema = new mongoose.Schema({
      },
      description: {
           type: String
+     },
+     isDeleted: {
+          type: Boolean,
+          default: false,
+          required: true,
+     },
+     deviceId: {
+          type: mongoose.Schema.Types.ObjectId,
+          required: true,
+          ref: "Device",
      }
 }, { timestamps: true });
 // serviceSchema.createIndex({name: 1}, {unique: true});

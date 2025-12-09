@@ -7,12 +7,12 @@ const userRouter = express.Router();
 userRouter.post("/register", register);
 
 // get all users
-userRouter.get("/get-all-users", requiredAdmin, getAllUsers);
+userRouter.get("/get-all", requiredAdmin, getAllUsers);
 
 // delete user
-userRouter.delete("/delete-user/:id", requiredAdmin, deleteUser);
+userRouter.delete("/delete/:id", requiredAdmin, deleteUser);
 
 // search user
-userRouter.get("/search-user", requiredUser, searchUser);;
+userRouter.get("/search", requiredUser, searchUser);;
 
 export default userRouter;

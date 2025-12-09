@@ -28,6 +28,11 @@ const promotionSchema = mongoose.Schema({
           type: Number,
           default: 0,
           min: 0,
+     },
+     isDeleted: {
+          type: Boolean,
+          default: false,
+          required: true,
      }
 }, { timestamps: true });
 

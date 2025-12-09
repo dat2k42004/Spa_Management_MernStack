@@ -31,6 +31,14 @@ const requiredUser = (req, res, next) => {
                })
           }
 
+          // check user deleted
+          if (user.isDeleted) {
+               return res.status(401).json({
+                    success: false,
+                    message: "Account deleted",
+               })
+          }
+
           // get user from token
           req.user = user;
           console.log("[auth] User from token:", req.user);
@@ -72,6 +80,14 @@ const requiredAdmin = (req, res, next) => {
                return res.status(401).json({
                     success: false,
                     message: "Invalid token type",
+               })
+          }
+
+          // check user deleted
+          if (user.isDeleted) {
+               return res.status(401).json({
+                    success: false,
+                    message: "Account deleted",
                })
           }
 

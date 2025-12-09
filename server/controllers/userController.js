@@ -3,6 +3,7 @@ import { hash } from "../utils/bcrypt.js";
 import { createAccessToken, createRefreshToken } from "../services/userService.js";
 import { textNormalize } from "../services/textService.js";
 import { searchFunc } from '../services/searchService.js';
+
 // post: api/user/register
 const register = async (req, res) => {
      try {
@@ -46,6 +47,7 @@ const register = async (req, res) => {
                tel: tel.trim(),
                address: textNormalize(address, "address"),
                role: role,
+               isDeleted: false,
           });
 
           await newUser.save();
@@ -60,7 +62,7 @@ const register = async (req, res) => {
                message: "User registered successfully!",
                data: {
                     user: {
-                         id: newUser._id,
+                         _id: newUser._id,
                          username: newUser.username,
                          email: newUser.email,
                          fullName: newUser.fullName,
@@ -68,6 +70,7 @@ const register = async (req, res) => {
                          address: newUser.address,
                          role: newUser.role,
                          avatar: newUser.avatar,
+                         isDeleted: newUser.isDeleted,
                     },
                     accessToken: access,
                     refreshToken: refresh,
@@ -84,7 +87,7 @@ const register = async (req, res) => {
 }
 
 
-// get: api/user/get-all-users
+// get: api/user/get-all (requiredAdmin)
 const getAllUsers = async (req, res) => {
      try {
           // get page & limit
@@ -92,8 +95,17 @@ const getAllUsers = async (req, res) => {
           const page = parseInt(req.query.page) || 1;
 
           const skip = (page - 1) * limit;
+
+          // get user
+          const user = await User.findOne({ _id: req.user.id, isDeleted: false });
+          if (!user) {
+               return res.status(400).json({
+                    success: false,
+                    message: "User not found",
+               })
+          }
           // get users
-          const users = await User.find().skip(skip).limit(limit).select("-password").sort({ createAt: 1 });
+          const users = await User.find({ isDeleted: false }).skip(skip).limit(limit).select("-password").sort({ createAt: 1 });
 
           res.status(200).json({
                success: true,
@@ -112,13 +124,13 @@ const getAllUsers = async (req, res) => {
      }
 }
 
-// delete: api/user/delete-user/:id
+// delete: api/user/delete/:id (requiredAdmin)
 const deleteUser = async (req, res) => {
      try {
           const userId = req.params.id;
 
           // check user exist
-          const user = await User.findById(userId);
+          const user = await User.findOne({ _id: userId, isDeleted: false });
           if (!user) {
                return res.status(400).json({
                     success: false,
@@ -127,7 +139,9 @@ const deleteUser = async (req, res) => {
           }
 
           // delete user
-          await User.findByIdAndDelete(userId);
+          user.isDeleted = true;
+
+          await user.save();
 
           res.status(200).json({
                success: true,
@@ -143,7 +157,7 @@ const deleteUser = async (req, res) => {
      }
 }
 
-// get: api/user/search-user
+// get: api/user/search (requiredUser)
 const searchUser = async (req, res) => {
      try {
           const userId = req.user.id;
@@ -151,10 +165,10 @@ const searchUser = async (req, res) => {
           const limit = parseInt(req.query.limit) || 10;
           const page = parseInt(req.query.page) || 1;
           const skip = (page - 1) * limit;
-          console.log("[searchUser] search: ", search);
+          // console.log("[searchUser] search: ", search);
 
           // check user exist
-          const user = await User.findOne({ _id: userId });
+          const user = await User.findOne({ _id: userId, isDeleted: false });
           if (!user) {
                return res.status(400).json({
                     success: false,
@@ -171,7 +185,7 @@ const searchUser = async (req, res) => {
           }
 
           // search user
-          const users = await searchFunc(search, User, "fullName", limit, skip);
+          const users = await searchFunc(search, User, "fullName", limit, skip, "-password");
 
           if (users.length === 0) {
                return res.status(200).json({

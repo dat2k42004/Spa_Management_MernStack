@@ -12,6 +12,7 @@ const generateToken = (user) => {
                {
                     id: user._id,
                     role: user.role,
+                    isDeleted: user.isDeleted,
                },
                JWT_SECRET,
                { expiresIn: JWT_EXPIRES_IN }
@@ -32,6 +33,7 @@ const refreshToken = (user) => {
                {
                     id: user._id,
                     role: user.role,
+                    isDeleted: user.isDeleted,
                     type: "refresh",
                },
                JWT_SECRET,
