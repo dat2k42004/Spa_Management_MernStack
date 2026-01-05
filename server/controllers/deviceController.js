@@ -9,10 +9,11 @@ import { textNormalize } from "../services/textService.js";
 
 // post: api/device/add (requiredUser)
 const addDevice = async (req, res) => {
+     const images = req.files ? req.files.map(file => `uploads/device/${file.filename}`) : [];
      try {
           const userId = req.user.id;
           const { name, type, number, description } = req.body;
-          const images = req.files ? req.files.map(file => `uploads/device/${file.filename}`) : [];
+          
 
           // check user exist
           const user = await User.findOne({ _id: userId, isDeleted: false });
@@ -83,6 +84,7 @@ const addDevice = async (req, res) => {
 
      }
      catch (error) {
+          deleteFiles(images);
           console.log("[addDevice] Error: ", error.message);
           return res.status(500).json({
                success: false,
@@ -93,12 +95,13 @@ const addDevice = async (req, res) => {
 
 // put: api/device/update/:id (requiredUser)
 const updateDevice = async (req, res) => {
+     const newImage = req.files ? req.files.map(f => `uploads/device/${f.filename}`) : [];
      try {
           const userId = req.user.id;
           const deviceId = req.params.id;
           let { type, number, description, currentImage } = req.body;
           currentImage = typeof currentImage === "string" ? JSON.parse(currentImage) : currentImage;
-          const newImage = req.files ? req.files.map(f => `uploads/device/${f.filename}`) : [];
+          
 
           // check user exist
           const user = await User.findOne({ _id: userId, isDeleted: false });
@@ -172,6 +175,7 @@ const updateDevice = async (req, res) => {
           })
      }
      catch (error) {
+          deleteFiles(newImage);
           console.log("[updateDevice] Error: ", error.message);
           return res.status(500).json({
                success: false,

@@ -7,10 +7,11 @@ import { searchFunc } from "../services/searchService.js";
 
 // post: api/ingredient/add (requiredUser)
 const addIngredient = async (req, res) => {
+     const images = req.files ? req.files.map(file => `uploads/ingredient/${file.filename}`) : [];
      try {
           const id = req.user.id;
           const { name, unit, number, description } = req.body;
-          const images = req.files ? req.files.map(file => `uploads/ingredient/${file.filename}`) : [];
+          
           // check user exist
           const user = await User.findOne({ _id: id, isDeleted: false });
           if (!user) {
@@ -70,6 +71,7 @@ const addIngredient = async (req, res) => {
 
      }
      catch (error) {
+          deleteFiles(images);
           console.log("[addIngredient] Error: ", error);
           return res.status(500).json({
                success: false,
@@ -80,12 +82,13 @@ const addIngredient = async (req, res) => {
 
 // put: api/ingredient/update/:id (requiredUser)
 const updateIngredient = async (req, res) => {
+     const images = req.files ? req.files.map(file => `uploads/ingredient/${file.filename}`) : [];
      try {
           const userId = req.user.id;
           let { unit, number, description, currentImage } = req.body;
           currentImage = typeof currentImage === "string" ? JSON.parse(currentImage) : currentImage;
           const ingredientId = req.params.id;
-          const images = req.files ? req.files.map(file => `uploads/ingredient/${file.filename}`) : [];
+          
 
           // check user exist
           const user = await User.findOne({ _id: userId, isDeleted: false });
@@ -166,6 +169,7 @@ const updateIngredient = async (req, res) => {
 
      }
      catch (error) {
+          deleteFiles(images);
           console.log("[updateIngredient] Error: ", error);
           return res.status(500).json({
                success: false,

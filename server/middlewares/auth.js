@@ -12,7 +12,7 @@ const requiredUser = (req, res, next) => {
           }
 
 
-          //verify token 
+          // verify token
           const token = authHeader.replace("Bearer ", "");
           const user = verifyToken(token);
 

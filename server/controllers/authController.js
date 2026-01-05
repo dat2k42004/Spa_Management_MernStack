@@ -178,10 +178,11 @@ const getUserInfo = async (req, res) => {
 
 // put: api/auth/update-profile (requiredUser)
 const updateProfile = async (req, res) => {
+     const avatarFile = req.file && req.file.filename ? `uploads/avatar/${req.file.filename}` : null;
      try {
           const userId = req.user.id;
           const { fullName, address } = req.body;
-          const avatarFile = req.file && req.file.filename ? `uploads/avatar/${req.file.filename}` : null;
+          
           console.log(fullName, address, avatarFile);
           // get user
           const user = await User.findOne({ _id: userId, isDeleted: false });
@@ -228,6 +229,7 @@ const updateProfile = async (req, res) => {
                }
           })
      } catch (error) {
+          deleteFile(avatarFile);
           console.log("[updateProfile] Error: ", error.message);
           res.status(500).json({
                success: false,

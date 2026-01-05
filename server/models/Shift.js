@@ -1,6 +1,12 @@
 import mongoose from "mongoose";
 
 const shiftSchema = new mongoose.Schema({
+     type: {
+          type: String,
+          required: true,
+          enum: ["MORNING", "AFTERNOON"],
+          default: "MORNING"
+     },
      date: {
           type: String,
           required: true,
@@ -11,6 +17,11 @@ const shiftSchema = new mongoose.Schema({
      },
      endTime: {
           type: String,
+          required: true,
+     },
+     isDeleted: {
+          type: Boolean,
+          default: false,
           required: true,
      }
 }, { timestamps: true });

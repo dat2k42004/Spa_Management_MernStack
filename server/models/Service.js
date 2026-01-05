@@ -12,10 +12,11 @@ const serviceSchema = new mongoose.Schema({
           enum: ["ACTIVE", "INACTIVE"],
           default: "INACTIVE",
      },
-     listedPrice: {
+     price: {
           type: Number,
           min: 0,
           required: true,
+          default: 0,
      },
      description: {
           type: String

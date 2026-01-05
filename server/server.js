@@ -1,7 +1,8 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import connectDB from "./config/database.js";
+import mongoDB from "./config/mongodb.js";
+import mysqlDB from "./config/mysql.js";
 import path from "path";
 import colors from "colors";
 import http from "http";
@@ -9,7 +10,7 @@ import http from "http";
 // import routes
 import router from "./routes/index.js";
 dotenv.config(); // load env var
-connectDB(); // connect to database
+mongoDB(); // connect to mongoDB
 const PORT = process.env.PORT || 8080;
 
 // create express app
@@ -37,6 +38,19 @@ app.use("/api", router);
 
 // error handling
 // app.use(notFound);
+
+// test mysql connection
+async function testMysqlConnection() {
+     try {
+          const [rows, fields] = await mysqlDB.query("select now() as now");
+          console.log(`[mysql] connected to mysql : ${process.env.MYSQL_HOST}:${process.env.MYSQL_PORT}/${process.env.MYSQL_DB}`.cyan.underline.bold);
+          return rows;
+     }
+     catch (error) {
+          console.log(`[mysql] error: ${error.message}`.red.underline.bold);
+     }
+}
+testMysqlConnection();
 
 
 

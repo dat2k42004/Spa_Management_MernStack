@@ -4,6 +4,8 @@ const supplierSchema = new mongoose.Schema({
      name: {
           type: String,
           required: true,
+          unique: true,
+          index: true,
      },
      email: {
           type: String,
@@ -27,6 +29,9 @@ const supplierSchema = new mongoose.Schema({
                type: String,
           },
           accountName: {
+               type: String,
+          },
+          qrCode: {
                type: String,
           }
      },
